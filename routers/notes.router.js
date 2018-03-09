@@ -14,26 +14,31 @@ const notes = simDB.initialize(data);
 router.get('/api/notes', (req, res, next) => {
   const { searchTerm } = req.query;
   
-  notes.filter(searchTerm, (err, list) => {
-    if (err) {
-      return next(err); // goes to error handler
-    }
-    res.json(list); // responds with filtered array
-  });
+  notes.filter(searchTerm)
+    .then (list => {
+      if (list) {
+        res.json(list);
+      } else {
+        next();
+      }
+    }) 
+    .catch(err => {
+      next(err);
+    });
+ 
 });
 
 //return a note at specified id
 router.get('/api/notes/:id', (req, res, next) => {
   const {id} = req.params; // returns string not number
   
-  notes.find(Number(id), (err, item) => {
-    if (err) {
-      return next(err);
-    }
-    res.json(item);
-  });
-  //let newData = data.find(item => item.id === Number(id));
-  //res.json(newData);
+  notes.find(Number(id))
+    .then (item => {
+      res.json(item);
+    })
+    .catch (err => {
+      next(err);
+    });
 });
   
   
@@ -50,17 +55,14 @@ router.put('api/notes/:id', (req, res, next) => {
       updateObj[field] = req.body[field];
     }
   });
-  
-  notes.update(id, updateObj, (err, item) => {
-    if (err) {
-      return next(err);
-    }
-    if (item) {
+
+  notes.update(id, updateObj)
+    .then (item => {
       res.json(item);
-    } else {
-      next();
-    }
-  });
+    })
+    .catch (err => {
+      next(err);
+    });
 });
 
 // Post (insert) an item
@@ -75,34 +77,34 @@ router.post('/v1/notes', (req, res, next) => {
     return next(err);
   }
 
-  notes.create(newItem, (err, item) => {
-    if (err) {
-      return next(err);
-    }
-    if (item) {
-      res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
-    } else {
-      next();
-    }
-  });
+  notes.create(newItem)
+    .then(item => {
+      if (item) {res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
+      }
+      else {
+        next();
+      }
+    })
+    .catch (err => {
+      next(err);
+    });
 });
 
 router.delete('/api/notes/:id', (req, res, next) => {
   const id = req.params.id; // returns string not number
 
-  notes.delete(Number(id), (err, item) => {
-    if (err) {
-      return next(err);
-    }
-    if(item) {
-      res.sendStatus(204);
-    }
-    else {
-      next();
-    }
-  });
-  //let newData = data.find(item => item.id === Number(id));
-  //res.json(newData);
+  notes.delete(Number(id))
+    .then (item => {
+      if (item) {
+        res.sendStatus(204);
+      } 
+      else {
+        next();
+      }
+    })
+    .catch (err => {
+      next(err);
+    });
 });
 
 module.exports = router;
