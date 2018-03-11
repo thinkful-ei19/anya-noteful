@@ -34,7 +34,12 @@ router.get('/api/notes/:id', (req, res, next) => {
   
   notes.find(Number(id))
     .then (item => {
-      res.json(item);
+      if(item) {res.json(item);}
+      else {
+        const err = new Error('incorrect Id');
+        err.status = 400;
+        return next(err);
+      }
     })
     .catch (err => {
       next(err);
